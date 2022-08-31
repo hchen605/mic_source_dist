@@ -1,0 +1,83 @@
+{
+  "Visdom": {
+    "host": null,
+    "port": null,
+    "env_path": null
+  },
+  "Setup": {
+    "name": "PTINAS",
+    "suffix": "MC",
+    "batch_train": null,
+    "batch_test": 16,
+    "workers_train": null,
+    "workers_test": 4,
+    "epochs": null,
+    "log_interval": null,
+    "saved_models_path": null,
+    "eval_only": true
+  },
+  "Model": {
+    "class": "model.esresnet_fbsp.ESResNeXtFBSP",
+    "args": {
+      "n_fft": 2048,
+      "hop_length": 561,
+      "win_length": 1654,
+      "window": "blackmanharris",
+      "normalized": true,
+      "onesided": true,
+      "spec_height": -1,
+      "spec_width": -1,
+      "num_classes": 7,
+      "apply_attention": true,
+      "pretrained": "/home/hsinhung/mic_acoustic/ESResNeXt-fbsp/weights/MicClassification_PTINAS_ESRNXFBSP-dist/MicClassification_PTINAS_ESRNXFBSP-dist_ESRNXFBSP-dist_performance=0.998780487804878.pth"
+    }
+  },
+  "Scheduler": {
+    "class": "torch.optim.lr_scheduler.ExponentialLR",
+    "args": {
+      "gamma": 0.99
+    }
+  },
+  "Dataset": {
+    "class": "utils.datasets.MicClassification",
+    "args": {
+      "train_csv": "",
+      "dev_csv": "/home/hsinhung/microphone_classification_extend/12class/data/test_dist_multi.csv",
+      "label_type": "16_types",
+      "sample_rate": 44100,
+      "training": {"key": "train", "yes": true, "no": false}
+    }
+  },
+  "Transforms": [
+    {
+      "class": "utils.transforms.ToTensor1D",
+      "args": {}
+    },
+    {
+      "class": "utils.transforms.RandomPadding",
+      "args": {"out_len": 220500, "train": false},
+      "train": false
+    },
+    {
+      "class": "utils.transforms.RandomCrop",
+      "args": {"out_len": 220500, "train": false},
+      "train": false
+    }
+  ],
+  "Metrics": {
+    "Performance": {
+      "window_name": null,
+      "x_label": "#Epochs",
+      "y_label": "Accuracy",
+      "width": 1890,
+      "height": 416,
+      "lines": [
+        {
+          "line_label": "Val. Acc.",
+          "class": "ignite.metrics.Accuracy",
+          "args": {}
+        }
+      ]
+    }
+  }
+}
