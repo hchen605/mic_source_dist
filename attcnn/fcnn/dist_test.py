@@ -125,7 +125,7 @@ print('--- Test loss:', score[0])
 print('- Test accuracy:', score[1])
 
 
-
+os.makedirs("record", exist_ok=True)
 file1 = open("record/record_dist_cls_{}_re.txt".format(args.limit), "a") 
   
 # writing newline character
