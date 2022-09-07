@@ -106,7 +106,6 @@ x_dev = np.array(x_dev)
 #x_test = np.array(x_test)
 
 
-
 if args.nclass == 0:
     y_train = y_train_3
     y_dev = y_dev_3
@@ -120,15 +119,21 @@ else:
     classes = classes_test
     experiments = '12class/'
 
-cls2label = {label: i for i, label in enumerate(classes)}
-num_classes = len(classes)
 
-y_train = [cls2label[y] for y in y_train]
-y_dev = [cls2label[y] for y in y_dev]
+
+# cls2label = {label: i for i, label in enumerate(classes)}
+# num_classes = len(classes)
+
+# y_train = [cls2label[y] for y in y_train]
+# y_dev = [cls2label[y] for y in y_dev]
 #y_test = [cls2label[y] for y in y_test]
 
-y_train = keras.utils.to_categorical(y_train, num_classes=num_classes)
-y_dev = keras.utils.to_categorical(y_dev, num_classes=num_classes)
+y_train = np.array([i.strip('m') for i in y_train], dtype = np.float64)
+y_dev = np.array([i.strip('m') for i in y_dev], dtype = np.float64)
+
+
+# y_train = keras.utils.to_categorical(y_train, num_classes=num_classes)
+# y_dev = keras.utils.to_categorical(y_dev, num_classes=num_classes)
 #y_test = keras.utils.to_categorical(y_test, num_classes=num_classes)
 
 # +
@@ -143,12 +148,11 @@ epochs = args.eps
 #length = x_train[0].shape[0]
 
 # Model
-model = model_fcnn(num_classes, input_shape=[num_freq_bin, None, num_audio_channels], num_filters=[24, 48, 96], wd=0)
+model = model_fcnn(input_shape=[num_freq_bin, None, num_audio_channels], num_filters=[24, 48, 96], wd=0)
 
 
-model.compile(loss='categorical_crossentropy',
-              optimizer=Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False),
-              metrics=['accuracy'])
+model.compile(loss='mean_absolute_error',
+              optimizer=Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False))
 
 
 model.summary()
@@ -158,7 +162,7 @@ if not os.path.exists('weight/weight_dist_limit{}/'.format(args.limit)+experimen
     os.makedirs('weight/weight_dist_limit{}/'.format(args.limit)+experiments)
 
 save_path = "weight/weight_dist_limit{}/".format(args.limit)+ experiments + "best.hdf5"
-checkpoint = keras.callbacks.ModelCheckpoint(save_path, monitor='val_accuracy', verbose=1, save_best_only=True)
+checkpoint = keras.callbacks.ModelCheckpoint(save_path, monitor='val_loss', verbose=1, save_best_only=True)
 callbacks = [checkpoint]
 
 
@@ -166,7 +170,7 @@ callbacks = [checkpoint]
 exp_history = model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, verbose=1,
               validation_data=(x_dev, y_dev), callbacks=callbacks)
 
-print("=== Best Val. Acc: ", max(exp_history.history['val_accuracy']), " At Epoch of ", np.argmax(exp_history.history['val_accuracy'])+1)
+print("=== Best Val. Loss: ", max(exp_history.history['val_loss']), " At Epoch of ", np.argmax(exp_history.history['val_loss'])+1)
 # +
 
 '''

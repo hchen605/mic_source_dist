@@ -91,9 +91,10 @@ cls2label = {label: i for i, label in enumerate(classes)}
 num_classes = len(classes)
 
 
-y_test = [cls2label[y] for y in y_test]
+# y_test = [cls2label[y] for y in y_test]
+y_test = np.array([i.strip('m') for i in y_test], dtype = np.float64)
 
-y_test = keras.utils.to_categorical(y_test, num_classes=num_classes)
+# y_test = keras.utils.to_categorical(y_test, num_classes=num_classes)
 
 # +
 # Parameters
@@ -107,22 +108,21 @@ epochs = args.eps
 #length = x_train[0].shape[0]
 
 # Model
-model = model_fcnn(num_classes, input_shape=[num_freq_bin, None, num_audio_channels], num_filters=[24, 48, 96], wd=0)
+model = model_fcnn(input_shape=[num_freq_bin, None, num_audio_channels], num_filters=[24, 48, 96], wd=0)
 weights_path = 'weight/weight_dist_limit{}/12class/best.hdf5'.format(args.limit)
 model.load_weights(weights_path)
 
 
-model.compile(loss='categorical_crossentropy',
-              optimizer=Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False),
-              metrics=['accuracy'])
+model.compile(loss='mean_absolute_error',
+              optimizer=Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False))
+
 
 model.summary()
 
 
 
 score = model.evaluate(x_test, y_test, verbose=0)
-print('--- Test loss:', score[0])
-print('- Test accuracy:', score[1])
+print('--- Test loss:', score)
 
 
 os.makedirs("record", exist_ok=True)
@@ -130,7 +130,7 @@ file1 = open("record/record_dist_cls_{}_re.txt".format(args.limit), "a")
   
 # writing newline character
 file1.write("\n")
-file1.write(str(score[1]))
+file1.write(str(score))
 file1.close()
 
 '''
