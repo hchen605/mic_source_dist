@@ -158,7 +158,7 @@ if not os.path.exists('weight/weight_dist_limit{}/'.format(args.limit)+experimen
     os.makedirs('weight/weight_dist_limit{}/'.format(args.limit)+experiments)
 
 save_path = "weight/weight_dist_limit{}/".format(args.limit)+ experiments + "best.hdf5"
-checkpoint = keras.callbacks.ModelCheckpoint(save_path, monitor='val_accuracy', verbose=1, save_best_only=True)
+checkpoint = keras.callbacks.ModelCheckpoint(save_path, monitor='val_loss', verbose=1, save_best_only=True)
 callbacks = [checkpoint]
 
 

@@ -127,17 +127,19 @@ def model_fcnn(num_classes, input_shape=None, num_filters=[24, 48, 96], wd=1e-3)
                             learn_bn=True,
                             wd=wd,
                             use_relu=True)
-    OutputPath = resnet_layer(inputs=ConvPath3,
-                              num_filters=num_classes,
-                              strides=1,
-                              kernel_size=1,
-                              learn_bn=False,
-                              wd=wd,
-                              use_relu=True)
+    # OutputPath = resnet_layer(inputs=ConvPath3,
+    #                           num_filters=num_classes,
+    #                           strides=1,
+    #                           kernel_size=1,
+    #                           learn_bn=False,
+    #                           wd=wd,
+    #                           use_relu=True)
 
+    OutputPath = ConvPath3
     OutputPath = BatchNormalization(center=False, scale=False)(OutputPath)
     OutputPath = channel_attention(OutputPath, ratio=2)
     OutputPath = GlobalAveragePooling2D()(OutputPath)
+    OutputPath = Dense(num_classes)(OutputPath)
     OutputPath = Activation('softmax')(OutputPath)
 
     model = Model(inputs=inputs, outputs=OutputPath)
