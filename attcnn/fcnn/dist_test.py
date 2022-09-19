@@ -120,6 +120,10 @@ model.compile(loss='mean_absolute_error',
 model.summary()
 
 
+# prediction = model.predict(x_test).squeeze()
+# AE = np.abs(y_test.squeeze() - prediction)
+# with open("AttCNN.npy", 'wb') as f:
+#     np.save(f,AE)
 
 score = model.evaluate(x_test, y_test, verbose=0)
 print('--- Test loss:', score)

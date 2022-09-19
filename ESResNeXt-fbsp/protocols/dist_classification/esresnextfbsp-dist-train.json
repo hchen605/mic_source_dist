@@ -11,7 +11,7 @@
     "batch_test": 16,
     "workers_train": 4,
     "workers_test": 4,
-    "epochs": 160,
+    "epochs": 60,
     "log_interval": 10,
     "saved_models_path": "weights"
   },
@@ -49,8 +49,8 @@
   "Dataset": {
     "class": "utils.datasets.MicClassification",
     "args": {
-      "train_csv": "/home/hsinhung/microphone_classification_extend/12class/data/train_dist.csv",
-      "dev_csv": "/home/hsinhung/microphone_classification_extend/12class/data/dev_dist.csv",
+      "train_csv": "/home/hsinhung/microphone_classification_extend/12class/data/train_dist_multi.csv",
+      "dev_csv": "/home/hsinhung/microphone_classification_extend/12class/data/dev_dist_multi.csv",
       "label_type": "16_types",
       "sample_rate": 44100,
       "training": {"key": "train", "yes": true, "no": false}
