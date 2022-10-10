@@ -242,3 +242,45 @@ class ESResNeXtFBSP(_ESResNetFBSP):
             groups=32,
             width_per_group=4
         )
+
+class ESResNeXtFBSP_Regression(ESResNeXtFBSP):
+    def __init__(self, pretrained: Union[bool, str] = False, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.activation = torch.nn.LeakyReLU(0.1)
+
+        self.fc2 = torch.nn.Linear(self.fc.weight.shape[0], 1, bias=False)
+        torch.nn.init.constant_(self.fc2.weight, 1)
+
+        self.pretrained = pretrained
+        if pretrained:
+            err_msg = self.load_pretrained()
+
+    def _forward_classifier(self, x: torch.Tensor) -> torch.Tensor:
+        x = self.fc(x)
+        x = self.activation(x)
+        ndim = x.shape[1]
+        x = self.fc2(x) / ndim
+        x = x.squeeze(-1)
+        return x
+
+    def loss_fn(self, y_pred: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+        loss_pred = F.l1_loss(y_pred, y.to(y_pred.device))
+
+        ttf_norm = torch.norm(ttf_weights[y_pred.device], p=2, dim=[-1, -2])
+        loss_ttf_norm = F.mse_loss(
+            ttf_norm,
+            torch.full_like(ttf_norm, 1.0 if self.normalized else self.n_fft ** 0.5)
+        )
+
+        loss = loss_pred + loss_ttf_norm
+        if torch.isnan(loss).any():
+            import ipdb; ipdb.sset_trace()
+        return loss
+
+class ESResNeXtFBSP_RegressionTest(ESResNeXtFBSP_Regression):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.activation = torch.nn.ReLU()
+
+        for name, param in self.named_parameters():
+            param.requires_grad = False

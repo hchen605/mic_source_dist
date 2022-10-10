@@ -16,7 +16,7 @@
     "saved_models_path": "weights"
   },
   "Model": {
-    "class": "model.esresnet_fbsp.ESResNeXtFBSP",
+    "class": "model.esresnet_fbsp.ESResNeXtFBSP_Regression",
     "args": {
       "n_fft": 2048,
       "hop_length": 561,
@@ -26,9 +26,9 @@
       "onesided": true,
       "spec_height": -1,
       "spec_width": -1,
-      "num_classes": 7,
+      "num_classes": 2048,
       "apply_attention": true,
-      "pretrained": "assets/ESResNeXtFBSP_AudioSet.pt"
+      "pretrained": null
     }
   },
   "Optimizer": {
@@ -52,6 +52,7 @@
       "train_csv": "/home/hsinhung/microphone_classification_extend/12class/data/train_dist.csv",
       "dev_csv": "/home/hsinhung/microphone_classification_extend/12class/data/dev_dist.csv",
       "label_type": "16_types",
+      "regression": true,
       "sample_rate": 44100,
       "training": {"key": "train", "yes": true, "no": false}
     }
@@ -96,15 +97,16 @@
     "Performance": {
       "window_name": null,
       "x_label": "#Epochs",
-      "y_label": "Accuracy",
+      "y_label": "MAE",
       "width": 1890,
       "height": 416,
       "lines": [
         {
-          "line_label": "Val. Acc.",
-          "class": "ignite.metrics.Accuracy",
+          "line_label": "Val. MAE.",
+          "class": "ignite.metrics.MeanAbsoluteError",
           "args": {},
-          "is_checkpoint": true
+          "is_checkpoint": true,
+          "save_lowest": true
         }
       ]
     }

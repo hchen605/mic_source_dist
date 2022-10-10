@@ -132,6 +132,7 @@ class MicClassification(td.Dataset):
                 sample_rate: int = 44100,
                 transform=None,
                 target_transform=None,
+                regression: bool = False,
                 limit=np.inf):
         super(MicClassification, self).__init__()
         self.root = train_csv if train else dev_csv
@@ -144,19 +145,22 @@ class MicClassification(td.Dataset):
 
         self.label_to_index = dict()
         self.data = dict()
-        self.load_data()
+        self.load_data(regression=regression)
         self.indices = list(self.data.keys())
     @staticmethod
     def _load_worker(idx: int, filename: str, sample_rate: Optional[int] = None) -> Tuple[int, int, np.ndarray]:
         if not os.path.exists(filename):
             print("Warning: file %s does not exist, skipped..." % filename, file=sys.stderr)
             return -1,-1,np.zeros(0)
-
-        wav, sample_rate = librosa.load(filename, sr=sample_rate, mono=True)
+        try:
+            wav, sample_rate = librosa.load(filename, sr=sample_rate, mono=True)
+        except ValueError:
+            print("Warning: Failed to load file %s, skipping..." % filename, file=sys.stderr)
+            return -1,-1,np.zeros(0)
         if wav.ndim == 1: wav = wav[:, np.newaxis]
         wav = wav.T * 32768
         return idx, sample_rate, wav.astype(np.float32)
-    def load_data(self):
+    def load_data(self, regression=False):
         meta = pd.read_csv(self.root, sep='\t')
         assert self.label_type in meta, \
             "Error: label_type %s isn't found. Need to be in %s" % (self.label_type, list(meta))
@@ -183,7 +187,10 @@ class MicClassification(td.Dataset):
                 if len(wav) == 0: continue
                 
                 row = meta.loc[idx]
-                target = self.label_to_index[row[self.label_type]]
+                if regression:
+                    target = float(row[self.label_type].strip('m'))
+                else:
+                    target = self.label_to_index[row[self.label_type]]
 
                 self.data[idx] = {
                     'audio': wav,
@@ -195,7 +202,7 @@ class MicClassification(td.Dataset):
         if not (0 <= index < len(self)):
             raise IndexError
         audio: np.ndarray = self.data[self.indices[index]]['audio']
-        target: int = self.data[self.indices[index]]['target']
+        target = self.data[self.indices[index]]['target']
         
         if self.transform is not None:
             audio = self.transform(audio)

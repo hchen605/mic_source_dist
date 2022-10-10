@@ -8,7 +8,7 @@
     "name": "PTINAS",
     "suffix": "MC",
     "batch_train": null,
-    "batch_test": 16,
+    "batch_test": 256,
     "workers_train": null,
     "workers_test": 4,
     "epochs": null,
@@ -17,7 +17,7 @@
     "eval_only": true
   },
   "Model": {
-    "class": "model.esresnet_fbsp.ESResNeXtFBSP",
+    "class": "model.esresnet_fbsp.ESResNeXtFBSP_RegressionTest",
     "args": {
       "n_fft": 2048,
       "hop_length": 561,
@@ -27,9 +27,9 @@
       "onesided": true,
       "spec_height": -1,
       "spec_width": -1,
-      "num_classes": 7,
+      "num_classes": 2048,
       "apply_attention": true,
-      "pretrained": "/home/hsinhung/mic_acoustic/ESResNeXt-fbsp/weights/MicClassification_PTINAS_ESRNXFBSP-dist/MicClassification_PTINAS_ESRNXFBSP-dist_ESRNXFBSP-dist_performance=0.998780487804878.pth"
+      "pretrained": null
     }
   },
   "Scheduler": {
@@ -42,9 +42,10 @@
     "class": "utils.datasets.MicClassification",
     "args": {
       "train_csv": "",
-      "dev_csv": "/home/hsinhung/microphone_classification_extend/12class/data/test_dist_multi.csv",
+      "dev_csv": "/home/hsinhung/microphone_classification_extend/12class/data/test_dist.csv",
       "label_type": "16_types",
       "sample_rate": 44100,
+      "regression": true,
       "training": {"key": "train", "yes": true, "no": false}
     }
   },
@@ -68,13 +69,13 @@
     "Performance": {
       "window_name": null,
       "x_label": "#Epochs",
-      "y_label": "Accuracy",
+      "y_label": "MAE",
       "width": 1890,
       "height": 416,
       "lines": [
         {
-          "line_label": "Val. Acc.",
-          "class": "ignite.metrics.Accuracy",
+          "line_label": "Val. MAE.",
+          "class": "ignite.metrics.MeanAbsoluteError",
           "args": {}
         }
       ]

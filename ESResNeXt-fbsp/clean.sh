@@ -1,5 +1,7 @@
 # !/bin/bash
 
-rm -rf weights/MicClassification_PTINAS_ESRNXFBSP-MC
-rm -rf $HOME/.visdom/MicClassification_PTINAS_ESRNXFBSP-MC.json
+set -x
+
+rm -rf weights
+rm -rf .visdom/MicClassification*.json
 rm -rf *.log

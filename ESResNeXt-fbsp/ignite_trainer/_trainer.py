@@ -220,6 +220,7 @@ def run(experiment_name: str,
 
         performance_metrics = {**default_metrics, **performance_metrics}
         checkpoint_metrics = list()
+        save_lowest = False
 
         for scope_name, scope in performance_metrics.items():
             scope['window_name'] = scope.get('window_name', scope_name) or scope_name
@@ -248,6 +249,8 @@ def run(experiment_name: str,
 
                     if line.get('is_checkpoint', False):
                         checkpoint_metrics.append(line['metric_label'])
+                    if line.get('save_lowest', False):
+                        save_lowest = True
 
                 if 'vis' in locals():
                     for line_suffix in line_suffixes:
@@ -284,6 +287,8 @@ def run(experiment_name: str,
                             score += engine.state.metrics[metric_name]
                         except KeyError:
                             pass
+                if save_lowest:
+                    score *= -1
 
                 return score
 

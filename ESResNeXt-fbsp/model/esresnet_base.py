@@ -472,6 +472,7 @@ class _ESResNet(ResNetWithAttention):
 
         self.pretrained = pretrained
         self._inject_members()
+
         if pretrained:
             err_msg = self.load_pretrained()
 
