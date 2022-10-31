@@ -76,14 +76,14 @@ class_m = ['mic','dimension','dist']
 
 classes_test = classes_dist
 
-if args.mixed:
-    train_csv = '../data/train_dist_multi.csv'
-    dev_csv = '../data/dev_dist_multi.csv'
-else:
-    train_csv = '../data/train_dist.csv'
-    dev_csv = '../data/dev_dist.csv'
-
-
+# if args.mixed:
+#     train_csv = '../data/train_dist_multi.csv'
+#     dev_csv = '../data/dev_dist_multi.csv'
+# else:
+#     train_csv = '../data/train_dist.csv'
+#     dev_csv = '../data/dev_dist.csv'
+train_csv = '/home/chunwei/phase3_data/phase3_all_seen_train.csv'
+dev_csv = '/home/chunwei/phase3_data/phase3_all_seen_val.csv'
 
 
 print('loading microphone data')
@@ -91,8 +91,8 @@ train = load_data(train_csv)
 dev = load_data(dev_csv)
 #test = load_data(test_csv)
 
-if args.limit < 600:
-    train = split_seed(train, args.limit, args.seed)
+# if args.limit < 600:
+#     train = split_seed(train, args.limit, args.seed)
 
 
 print ("=== Number of training data: {}".format(len(train)))

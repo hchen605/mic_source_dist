@@ -51,8 +51,10 @@ def _load_data(data):
 def load_data(data_csv):
     data_df = pd.read_csv(data_csv, sep='\t')   
     wavpath = data_df['filename'].tolist()
-    labels_3 = data_df['3_types'].to_list()
-    labels_16 = data_df['16_types'].to_list()
+    # labels_3 = data_df['3_types'].to_list()
+    labels_3 = data_df['distance'].to_list()
+    # labels_16 = data_df['16_types'].to_list()
+    labels_16 = data_df['distance'].to_list()
     datas = zip(wavpath, labels_3, labels_16)
 
     with Pool(32) as p:

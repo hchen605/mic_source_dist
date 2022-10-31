@@ -248,9 +248,6 @@ class ESResNeXtFBSP_Regression(ESResNeXtFBSP):
         super().__init__(*args, **kwargs)
         self.activation = torch.nn.LeakyReLU(0.1)
 
-        self.fc2 = torch.nn.Linear(self.fc.weight.shape[0], 1, bias=False)
-        torch.nn.init.constant_(self.fc2.weight, 1)
-
         self.pretrained = pretrained
         if pretrained:
             err_msg = self.load_pretrained()
@@ -258,8 +255,6 @@ class ESResNeXtFBSP_Regression(ESResNeXtFBSP):
     def _forward_classifier(self, x: torch.Tensor) -> torch.Tensor:
         x = self.fc(x)
         x = self.activation(x)
-        ndim = x.shape[1]
-        x = self.fc2(x) / ndim
         x = x.squeeze(-1)
         return x
 

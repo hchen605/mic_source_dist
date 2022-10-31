@@ -58,10 +58,11 @@ class_m = ['mic','dimension','dist']
 
 classes_test = classes_dist
 
-if args.mixed:
-    test_csv = '../data/test_dist_multi.csv'
-else:
-    test_csv = '../data/test_dist.csv'
+# if args.mixed:
+#     test_csv = '../data/test_dist_multi.csv'
+# else:
+#     test_csv = '../data/test_dist.csv'
+test_csv = '/home/chunwei/phase3_data/phase3_all_seen_test.csv'
 
 
 print('loading microphone data')

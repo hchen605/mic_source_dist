@@ -29,7 +29,7 @@
       "spec_width": -1,
       "num_classes": 7,
       "apply_attention": true,
-      "pretrained": "/home/hsinhung/mic_acoustic/ESResNeXt-fbsp/weights/MicClassification_PTINAS_ESRNXFBSP-dist/MicClassification_PTINAS_ESRNXFBSP-dist_ESRNXFBSP-dist_performance=0.998780487804878.pth"
+      "pretrained": null
     }
   },
   "Scheduler": {
@@ -42,7 +42,7 @@
     "class": "utils.datasets.MicClassification",
     "args": {
       "train_csv": "",
-      "dev_csv": "/home/hsinhung/microphone_classification_extend/12class/data/test_dist_multi.csv",
+      "dev_csv": "/home/hsinhung/microphone_classification_extend/12class/data/test_dist.csv",
       "label_type": "16_types",
       "sample_rate": 44100,
       "training": {"key": "train", "yes": true, "no": false}

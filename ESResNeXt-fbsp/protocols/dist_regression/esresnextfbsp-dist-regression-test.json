@@ -27,7 +27,7 @@
       "onesided": true,
       "spec_height": -1,
       "spec_width": -1,
-      "num_classes": 2048,
+      "num_classes": 1,
       "apply_attention": true,
       "pretrained": null
     }

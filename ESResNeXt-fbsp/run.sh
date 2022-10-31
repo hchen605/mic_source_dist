@@ -3,7 +3,7 @@
 set -euo pipefail
 
 downloaded_model=assets/ESResNeXtFBSP_AudioSet.pt
-pretrain_config=protocols/dist_classification/esresnextfbsp-dist-train.json
+model_link=https://github.com/AndreyGuzhov/ESResNeXt-fbsp/releases/download/v0.1/ESResNeXtFBSP_AudioSet.pt
 train_config=protocols/dist_regression/esresnextfbsp-dist-regression-train.json
 visdom_port=8097
 stage=0
@@ -34,21 +34,19 @@ train () {
 }
 
 if [ $stage -le 0 ] && [ $stop_stage -ge 0 ]; then
-    echo "Stage 0: Pretraining using classification"
-    rm -rf weights/MicClassification_PTINAS_ESRNXFBSP-dist
-    
-    pretrained=$downloaded_model
-    config=$pretrain_config; train
+    if [ ! -f $downloaded_model ]; then
+        echo "Stage 0: download model to $downloaded_model"
+        mkdir -p `dirname $downloaded_model`
+        wget -O $downloaded_model $model_link
+    fi
 fi
 
 if [ $stage -le 1 ] && [ $stop_stage -ge 1 ]; then
     echo "Stage 1: Train model using regression"
-    rm -rf weights/MicClassification_PTINAS_ESRNXFBSP_R-dist
-
-    pretrain_dir=weights/MicClassification_PTINAS_ESRNXFBSP-dist
-    pretrained=$pretrain_dir/`ls $pretrain_dir | head -n 1`
     
-    config=$train_config; train
+    pretrained=$downloaded_model
+    config=$train_config
+    train
 fi
 
 execution_time=$[$SECONDS-$start_time]

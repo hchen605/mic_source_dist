@@ -13,7 +13,7 @@
     "workers_test": 4,
     "epochs": 60,
     "log_interval": 10,
-    "saved_models_path": "weights"
+    "saved_models_path": "weights/unseenmic"
   },
   "Model": {
     "class": "model.esresnet_fbsp.ESResNeXtFBSP_Regression",
@@ -49,9 +49,9 @@
   "Dataset": {
     "class": "utils.datasets.MicClassification",
     "args": {
-      "train_csv": "/home/hsinhung/microphone_classification_extend/12class/data/train_dist.csv",
-      "dev_csv": "/home/hsinhung/microphone_classification_extend/12class/data/dev_dist.csv",
-      "label_type": "16_types",
+      "train_csv": "/home/chunwei/phase3_data/phase3_all_unseenmic_train.csv",
+      "dev_csv": "/home/chunwei/phase3_data/phase3_all_unseenmic_val.csv",
+      "label_type": "distance",
       "regression": true,
       "sample_rate": 44100,
       "training": {"key": "train", "yes": true, "no": false}
