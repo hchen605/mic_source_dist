@@ -2,26 +2,26 @@
 
 set -euo pipefail
 
-ESResNeXt_config=protocols/dist_regression/esresnextfbsp-dist-regression-test_multi.json
-savedir=weights/MicClassification_PTINAS_ESRNXFBSP_R-dist
-pretrained=
+test_config=protocols/dist_regression/esresnextfbsp-dist-phase3-seen-test.json
+savedir=weights/seen/MicClassification_PTINAS_ESRNXFBSP_R-dist
+trained_model=
 
 . utils/parse_options.sh
 
 start_time=$SECONDS
 
-if [ -z $pretrained ]; then
-    pretrained=$savedir/`ls $savedir | head -n 1`
+if [ -z $trained_model ]; then
+    trained_model=$savedir/`ls $savedir | head -n 1`
 else
-    pretrained=$savedir/$pretrained
+    trained_model=$savedir/$trained_model
 fi
 
-echo "Using config=$ESResNeXt_config"
-echo "Using model=$pretrained"
+echo "Using config=$test_config"
+echo "Using model=$trained_model"
 
 python main.py \
-    --pretrained $pretrained \
-    --config $ESResNeXt_config
+    --pretrained $trained_model \
+    --config $test_config
 
 execution_time=$[$SECONDS-$start_time]
 

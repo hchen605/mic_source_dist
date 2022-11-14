@@ -99,7 +99,7 @@ def get_data_loaders(Dataset: Type,
           batch_size=batch_train,
           shuffle=dl_shuffle,
           num_workers=workers_train,
-          pin_memory=True,
+          pin_memory=False,
           drop_last=((len(ds_train) % batch_train) == 1)
       )
     else: train_loader = torch.utils.data.DataLoader([])
@@ -112,7 +112,7 @@ def get_data_loaders(Dataset: Type,
         ds_eval,
         batch_size=batch_test,
         num_workers=workers_test,
-        pin_memory=True
+        pin_memory=False
     )
 
     return train_loader, eval_loader

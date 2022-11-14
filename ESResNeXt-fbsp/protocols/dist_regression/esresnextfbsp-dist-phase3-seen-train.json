@@ -49,8 +49,9 @@
   "Dataset": {
     "class": "utils.datasets.MicClassification",
     "args": {
-      "train_csv": "/home/chunwei/phase3_data/phase3_all_seen_train.csv",
-      "dev_csv": "/home/chunwei/phase3_data/phase3_all_seen_val.csv",
+      "root": "/home/speech",
+      "train_csv": "../data/phase3_all_seen_train.csv",
+      "dev_csv": "../data/phase3_all_seen_val.csv",
       "label_type": "distance",
       "regression": true,
       "sample_rate": 44100,

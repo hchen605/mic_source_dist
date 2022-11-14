@@ -6,17 +6,18 @@
   },
   "Setup": {
     "name": "PTINAS",
-    "suffix": "dist",
-    "batch_train": 16,
+    "suffix": "MC",
+    "batch_train": null,
     "batch_test": 256,
-    "workers_train": 4,
+    "workers_train": null,
     "workers_test": 4,
-    "epochs": 60,
-    "log_interval": 10,
-    "saved_models_path": "weights"
+    "epochs": null,
+    "log_interval": null,
+    "saved_models_path": null,
+    "eval_only": true
   },
   "Model": {
-    "class": "model.esresnet_fbsp.ESResNeXtFBSP_Regression",
+    "class": "model.esresnet_fbsp.ESResNeXtFBSP",
     "args": {
       "n_fft": 2048,
       "hop_length": 561,
@@ -26,18 +27,9 @@
       "onesided": true,
       "spec_height": -1,
       "spec_width": -1,
-      "num_classes": 1,
+      "num_classes": 7,
       "apply_attention": true,
       "pretrained": null
-    }
-  },
-  "Optimizer": {
-    "class": "torch.optim.Adam",
-    "args": {
-      "lr": 1e-5,
-      "betas": [0.9, 0.999],
-      "eps": 1e-8,
-      "weight_decay": 5e-4
     }
   },
   "Scheduler": {
@@ -49,10 +41,10 @@
   "Dataset": {
     "class": "utils.datasets.MicClassification",
     "args": {
-      "train_csv": "/home/hsinhung/microphone_classification_extend/12class/data/train_dist.csv",
-      "dev_csv": "/home/hsinhung/microphone_classification_extend/12class/data/dev_dist.csv",
-      "label_type": "16_types",
-      "regression": true,
+      "root": "/home/speech",
+      "train_csv": "../data/phase3_all_seen_train.csv",
+      "dev_csv": "../data/phase3_all_seen_val.csv",
+      "label_type": "distance",
       "sample_rate": 44100,
       "training": {"key": "train", "yes": true, "no": false}
     }
@@ -61,26 +53,6 @@
     {
       "class": "utils.transforms.ToTensor1D",
       "args": {}
-    },
-    {
-      "class": "utils.transforms.RandomFlip",
-      "args": {"p": 0.5},
-      "test": false
-    },
-    {
-      "class": "utils.transforms.RandomScale",
-      "args": {"max_scale": 1.5},
-      "test": false
-    },
-    {
-      "class": "utils.transforms.RandomPadding",
-      "args": {"out_len": 220500},
-      "test": false
-    },
-    {
-      "class": "utils.transforms.RandomCrop",
-      "args": {"out_len": 220500},
-      "test": false
     },
     {
       "class": "utils.transforms.RandomPadding",
@@ -97,16 +69,14 @@
     "Performance": {
       "window_name": null,
       "x_label": "#Epochs",
-      "y_label": "MAE",
+      "y_label": "Accuracy",
       "width": 1890,
       "height": 416,
       "lines": [
         {
-          "line_label": "Val. MAE.",
-          "class": "ignite.metrics.MeanAbsoluteError",
-          "args": {},
-          "is_checkpoint": true,
-          "save_lowest": true
+          "line_label": "Val. Acc.",
+          "class": "ignite.metrics.Accuracy",
+          "args": {}
         }
       ]
     }

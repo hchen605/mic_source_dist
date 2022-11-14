@@ -159,13 +159,13 @@ class _ESResNetFBSP(_ESResNet):
     def loss_fn(self, y_pred: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         loss_pred = super(_ESResNetFBSP, self).loss_fn(y_pred, y)
 
-        ttf_norm = torch.norm(ttf_weights[y_pred.device], p=2, dim=[-1, -2])
-        loss_ttf_norm = F.mse_loss(
-            ttf_norm,
-            torch.full_like(ttf_norm, 1.0 if self.normalized else self.n_fft ** 0.5)
-        )
+        # ttf_norm = torch.norm(ttf_weights[y_pred.device], p=2, dim=[-1, -2])
+        # loss_ttf_norm = F.mse_loss(
+        #     ttf_norm,
+        #     torch.full_like(ttf_norm, 1.0 if self.normalized else self.n_fft ** 0.5)
+        # )
 
-        loss = loss_pred + loss_ttf_norm
+        loss = loss_pred # + loss_ttf_norm
 
         return loss
 
@@ -261,15 +261,13 @@ class ESResNeXtFBSP_Regression(ESResNeXtFBSP):
     def loss_fn(self, y_pred: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         loss_pred = F.l1_loss(y_pred, y.to(y_pred.device))
 
-        ttf_norm = torch.norm(ttf_weights[y_pred.device], p=2, dim=[-1, -2])
-        loss_ttf_norm = F.mse_loss(
-            ttf_norm,
-            torch.full_like(ttf_norm, 1.0 if self.normalized else self.n_fft ** 0.5)
-        )
+        # ttf_norm = torch.norm(ttf_weights[y_pred.device], p=2, dim=[-1, -2])
+        # loss_ttf_norm = F.mse_loss(
+        #     ttf_norm,
+        #     torch.full_like(ttf_norm, 1.0 if self.normalized else self.n_fft ** 0.5)
+        # )
 
-        loss = loss_pred + loss_ttf_norm
-        if torch.isnan(loss).any():
-            import ipdb; ipdb.sset_trace()
+        loss = loss_pred # + loss_ttf_norm
         return loss
 
 class ESResNeXtFBSP_RegressionTest(ESResNeXtFBSP_Regression):

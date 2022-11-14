@@ -4,7 +4,7 @@ set -euo pipefail
 
 downloaded_model=assets/ESResNeXtFBSP_AudioSet.pt
 model_link=https://github.com/AndreyGuzhov/ESResNeXt-fbsp/releases/download/v0.1/ESResNeXtFBSP_AudioSet.pt
-train_config=protocols/dist_regression/esresnextfbsp-dist-regression-train.json
+train_config=protocols/dist_regression/esresnextfbsp-dist-phase3-seen-train.json
 visdom_port=8097
 stage=0
 stop_stage=999

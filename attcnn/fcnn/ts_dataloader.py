@@ -4,6 +4,7 @@ import pandas as pd
 import soundfile as sound
 
 from tensorflow import keras
+from tqdm.contrib.concurrent import process_map
 
 import glob
 from tqdm import tqdm
@@ -17,28 +18,18 @@ sr = 16000
 duration = 3
 
 # +
-def _load_data(data):
-    wav, y_3, y_16 = data
-    #print(wav)
+def _load_data(wav):
     if not os.path.isfile(wav):
         print(f"Warning: audio file {wav} does not exist", file=sys.stderr)
         return None
     stereo, fs = sound.read(wav)
-    #print(stereo.shape)
-    #assert stereo.shape[0] > 0
+
     if stereo.shape[0] == 0:
-        return 0.5*np.ones(sr*duration), y_3, y_16
+        return 0.5*np.ones(sr*duration)
     stereo = stereo / np.abs(stereo).max()
     stereo = librosa.to_mono(stereo.T)
     if fs != sr:
         stereo = librosa.resample(stereo, fs, sr)
-        
-    #assert stereo.shape[0] > 16000
-    #noise only
-    #orig_shape = stereo.shape
-    #assert orig_shape[0] > 16000
-    #trimmed, index = librosa.effects.trim(stereo, top_db=20)
-    #stereo = np.concatenate((stereo[0:index[0]], stereo[index[1]:-1]))
 
     if stereo.shape[0] > sr*duration:
         start = (stereo.shape[0] - sr*duration) // 2
@@ -46,21 +37,18 @@ def _load_data(data):
     else:
         x = np.pad(stereo, (0, sr*duration-stereo.shape[0]))
     
-    return x, y_3, y_16
+    return x
 
-def load_data(data_csv):
+def load_data(data_csv, root):
     data_df = pd.read_csv(data_csv, sep='\t')   
     wavpath = data_df['filename'].tolist()
-    # labels_3 = data_df['3_types'].to_list()
-    labels_3 = data_df['distance'].to_list()
-    # labels_16 = data_df['16_types'].to_list()
-    labels_16 = data_df['distance'].to_list()
-    datas = zip(wavpath, labels_3, labels_16)
+    labels = data_df['distance'].to_list()
+    wavpath = [os.path.join(root, i) for i in wavpath]
+    wav = process_map(_load_data, wavpath, desc=f"Loading {data_csv}")
+    wav = np.array([i for i in wav if i is not None])
 
-    with Pool(32) as p:
-        result = p.map(_load_data, datas)
-    result = [i for i in result if i is not None]
-    return result
+    labels = np.array([i.strip('m') for i in labels], dtype = np.float64)
+    return wav, labels
 
 def _load_data_rir(data):
     wav, y_3, y_16, rir = data
