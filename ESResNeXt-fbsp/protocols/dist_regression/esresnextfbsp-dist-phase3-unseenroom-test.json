@@ -44,9 +44,9 @@
       "root": "/home/speech",
       "train_csv": "",
       "dev_csv": "../data/phase3_all_unseenroom_test.csv",
+      "sample_rate": 44100,
       "label_type": "distance",
       "regression": true,
-      "sample_rate": 44100,
       "training": {"key": "train", "yes": true, "no": false}
     }
   },

@@ -25,6 +25,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--savedir", type=str, default=os.path.join("weight", "AttCNN"))
 parser.add_argument("--test_csv", type=str, default='../../data/phase3_all_seen_test.csv')
 parser.add_argument("--root", type=str, default='/home/speech')
+parser.add_argument("--narrowband", type=int, nargs='+', default=None)
 
 args = parser.parse_args()
 
@@ -35,7 +36,7 @@ session = InteractiveSession(config=config)
 sess = Session(graph=tensorflow.compat.v1.get_default_graph(), config=config)
 K.set_session(sess)
 
-x_test, y_test = load_data(args.test_csv, root=args.root)
+x_test, y_test = load_data(args.test_csv, root=args.root, narrowband=args.narrowband)
 num_freq_bin = 128
 num_audio_channels = 1
 

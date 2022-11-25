@@ -19,6 +19,8 @@ from utils import transforms
 from typing import Tuple
 from typing import Optional
 
+from scipy import signal
+
 
 m.patch()
 
@@ -30,6 +32,7 @@ class MicClassification(td.Dataset):
                 train: bool = True,
                 root: str = "",
                 sample_rate: int = 44100,
+                narrowband = None,
                 transform=None,
                 target_transform=None,
                 regression: bool = False,
@@ -46,22 +49,28 @@ class MicClassification(td.Dataset):
 
         self.label_to_index = dict()
         self.data = dict()
-        self.load_data(regression=regression)
+        self.load_data(regression=regression, narrowband=narrowband)
         self.indices = list(self.data.keys())
     @staticmethod
-    def _load_worker(idx: int, filename: str, sample_rate: Optional[int] = None) -> Tuple[int, int, np.ndarray]:
+    def _load_worker(idx: int, filename: str, sample_rate: Optional[int] = None, narrowband=None) -> Tuple[int, int, np.ndarray]:
         if not os.path.exists(filename):
             print("Warning: file %s does not exist, skipped..." % filename, file=sys.stderr)
             return -1,-1,np.zeros(0)
         try:
             wav, sample_rate = librosa.load(filename, sr=sample_rate, mono=True)
+            if narrowband is not None:
+                if narrowband[0] == 0:
+                    b, a = signal.butter(8, narrowband[1], 'lowpass', fs=sample_rate)
+                else:
+                    b, a = signal.butter(8, narrowband, 'bandpass', fs=sample_rate)
+                wav = signal.filtfilt(b, a, wav)
         except ValueError:
             print("Warning: Failed to load file %s, skipping..." % filename, file=sys.stderr)
             return -1,-1,np.zeros(0)
         if wav.ndim == 1: wav = wav[:, np.newaxis]
         wav = wav.T * 32768
         return idx, sample_rate, wav.astype(np.float32)
-    def load_data(self, regression=False):
+    def load_data(self, regression=False, narrowband=None):
         meta = pd.read_csv(self.csv, sep='\t')
         assert self.label_type in meta, \
             "Error: label_type %s isn't found. Need to be in %s" % (self.label_type, list(meta))
@@ -75,7 +84,7 @@ class MicClassification(td.Dataset):
             if label_count[label] >= self.limit: continue
             label_count[label] += 1
             items_to_load.append((idx, os.path.join(self.root, row['filename']),
-                     self.sample_rate))
+                     self.sample_rate, narrowband))
         
         warnings.filterwarnings("ignore")
         with mp.Pool(processes=mp.cpu_count()) as pool:

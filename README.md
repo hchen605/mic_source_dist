@@ -14,16 +14,89 @@ docker build -t hchen605/mic_source_dist .
 docker run --shm-size=1g -v <dataset_path>:/home/speech -it --rm --privileged --gpus all -w /home/mic_source_dist hchen605/mic_source_dist:latest
 ```
 
-## Training
+## Data preparation
 
-#### ESResNext
+#### Step 1: Place the wav files
+
+Place all the wav files for training and testing into a directory. The path of the directory doesn't matter, just pass it to the code using the `root` parameter.
+
+#### Step 2: Creat csv files contianing the waveform information
+
+Create `train_csv`, `val_csv` and `test_csv` using the following format.
+The separator for the csv files are `\t`.
+
+```text
+filename distance
+<subpath of wav1 from root> <labeled distance1>
+<subpath of wav2 from root> <labeled distance2>
+<subpath of wav3 from root> <labeled distance3>
+.
+.
+.
+```
+
+Take a look at the example [train_csv](data/phase3_all_seen_train.csv).
+
+## AttCNN
+
+#### Training
+
+```bash
+cd attcnn/fcnn
+python dist_train.py [options]
+```
+
+###### Options
+
+* `--savedir <savedir>`
+  Default: `weights/AttCNN`
+  
+  The path where the trained model is saved
+
+* `--train_csv <train_csv>`, `--dev_csv <dev_csv>`
+  Default: `../../data/phase3_all_seen_train.csv`, `../../data/phase3_all_seen_val.csv`
+  
+  The path of the file containing the wavform information
+
+* `--root <root>`
+  Default: `/home/speech`
+  
+  The prefix of the path listed in `<train_csv>` and `<dev_csv>`
+
+#### Testing
+
+```bash
+cd attcnn/fcnn
+python dist_test.py [options]
+```
+
+###### Options
+
+* `--savedir <savedir>`
+  Default: `weights/AttCNN`
+  
+  The path where the trained model is saved
+
+* `--test_csv <test_csv>`
+  Default: `../../data/phase3_all_seen_test.csv`
+  
+  The path of the file containing the wavform information
+
+* `--root <root>`
+  Default: `/home/speech`
+  
+  The prefix of the path listed in `<test_csv>`
+
+## ESResNext
+
+#### Training
 
 ```bash
 cd ESResNext-fbsp
 ./run.sh [options]
 ```
 
-##### Options
+###### Options
 
 * `--train_config <config>`
   
@@ -53,23 +126,51 @@ cd ESResNext-fbsp
   
   * Stage 1: Start the visdom process and run the training script.
 
-## ## Testing
+#### Testing
 
-## Trouble Shooting
+```bash
+cd ESResNext-fbsp
+./test.sh [options]
+```
 
-#### ESResNeXt
+###### Options
+
+* `--test_config <test_config>`
+  Default: `protocols/dist_regression/esresnextfbsp-dist-phase3-seen-test.json`
+  
+  The configuration files of the testing data. The examples of configuration files are put in [ESResNext-fbsp/protocols](ESResNext-fbsp/protocols).
+
+* `--savedir <savedir>`
+  Default: `weights/seen/MicClassification_PTINAS_ESRNXFBSP_R-dist`
+  
+  The path where the trained model is saved
+
+* `--trained_model <trained_model>`
+  Default: The first model in `ls <savedir>`
+  
+  Trained model name.
+
+#### Trouble Shooting
 
 * Port  8097 is in use
   
   Try to change another visdom port using `--visdom_port`. Or try `pkill visdom`
 
 * CUDA out of memory
-
+  
   The default configuration requires roughly 32434 MiB of GPU. Make sure there are at least 33000 MiB of it. If you have enough GPU but still get the error, try the following command to reset the GPU.
+  
   ```
     # Please replace the <gpu id> to the gpu index (0, 1, 2, 3, etc)
     export CUDA_VISIBLE_DEVICES=<gpu id>
   ```
+  
   If you don't have enough GPU, try run the script with a smaller batch size. You can change the batch size by modifying [the configuration files](ESResNeXt-fbsp/protocols)
 
-## Current result:
+## Current result (MAE in meters):
+
+|Configurations|AttCNN|ESResNeXt|
+|-|-|-|
+|Matched|0.0877|0.0593|
+|Unseen Room|0.9982|0.8705|
+|Unseen Microphone|0.5530|0.2626|

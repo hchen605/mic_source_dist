@@ -26,6 +26,7 @@ parser.add_argument("--eps", type=int, default=100, help="number of epochs")
 parser.add_argument("--savedir", type=str, default=os.path.join("weight", "AttCNN"))
 parser.add_argument("--train_csv", type=str, default='../../data/phase3_all_seen_train.csv')
 parser.add_argument("--dev_csv", type=str, default='../../data/phase3_all_seen_val.csv')
+parser.add_argument("--narrowband", type=int, nargs='+', default=None)
 parser.add_argument("--root", type=str, default='/home/speech')
 args = parser.parse_args()
 
@@ -38,8 +39,8 @@ config = tensorflow.compat.v1.ConfigProto(intra_op_parallelism_threads=1,inter_o
 sess = tensorflow.compat.v1.Session(graph=tensorflow.compat.v1.get_default_graph(), config=config)
 K.set_session(sess)
 
-x_train, y_train = load_data(args.train_csv, root=args.root)
-x_dev, y_dev = load_data(args.dev_csv, root=args.root)
+x_train, y_train = load_data(args.train_csv, root=args.root, narrowband=args.narrowband)
+x_dev, y_dev = load_data(args.dev_csv, root=args.root, narrowband=args.narrowband)
 
 
 print ("=== Number of training data: {}".format(len(y_train)))

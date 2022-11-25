@@ -11,6 +11,8 @@ from tqdm import tqdm
 import concurrent.futures
 from multiprocessing import Pool
 
+from scipy import signal
+
 import os
 import sys
 
@@ -18,16 +20,28 @@ sr = 16000
 duration = 3
 
 # +
-def _load_data(wav):
+def _load_data(args):
+    wav, narrowband = args
     if not os.path.isfile(wav):
         print(f"Warning: audio file {wav} does not exist", file=sys.stderr)
         return None
-    stereo, fs = sound.read(wav)
+    # stereo, fs = sound.read(wav)
+    stereo, fs = librosa.load(wav, sr=None, mono=True)
 
+    if narrowband != None:
+        if narrowband[0] == 0:
+            b, a = signal.butter(8, narrowband[1], 'lowpass', fs=fs)
+        else:
+            b, a = signal.butter(8, narrowband, 'bandpass', fs=fs)
+        stereo = signal.filtfilt(b, a, stereo)
+    if np.isnan(stereo).any():
+        print(f"The wavform contains nan, try lower butterworth order", file=sys.stderr)
+        exit(1)
     if stereo.shape[0] == 0:
-        return 0.5*np.ones(sr*duration)
+        return None
     stereo = stereo / np.abs(stereo).max()
-    stereo = librosa.to_mono(stereo.T)
+    # stereo = librosa.to_mono(stereo.T)
+
     if fs != sr:
         stereo = librosa.resample(stereo, fs, sr)
 
@@ -39,12 +53,14 @@ def _load_data(wav):
     
     return x
 
-def load_data(data_csv, root):
+def load_data(data_csv, root, narrowband=None):
     data_df = pd.read_csv(data_csv, sep='\t')   
     wavpath = data_df['filename'].tolist()
     labels = data_df['distance'].to_list()
     wavpath = [os.path.join(root, i) for i in wavpath]
-    wav = process_map(_load_data, wavpath, desc=f"Loading {data_csv}")
+
+    mapper = [(i, narrowband) for i in wavpath]
+    wav = process_map(_load_data, mapper, desc=f"Loading {data_csv}")
     wav = np.array([i for i in wav if i is not None])
 
     labels = np.array([i.strip('m') for i in labels], dtype = np.float64)
