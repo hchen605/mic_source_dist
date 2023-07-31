@@ -41,9 +41,10 @@
   "Dataset": {
     "class": "utils.datasets.MicClassification",
     "args": {
-      "root": "/home/speech",
-      "train_csv": "../data/phase3_all_seen_train.csv",
-      "dev_csv": "../data/phase3_all_seen_val.csv",
+      "root": "/home/koredata/hsinhung/speech",
+      "train_csv": null,
+      "label_set": ["0.02m", "1m", "3m", "5m", "7m", "9m"],
+      "dev_csv": "/home/chunwei/data/small_unseenmic.csv",
       "label_type": "distance",
       "sample_rate": 44100,
       "training": {"key": "train", "yes": true, "no": false}

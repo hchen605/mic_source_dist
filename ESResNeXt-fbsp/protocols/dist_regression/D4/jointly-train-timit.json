@@ -13,22 +13,23 @@
     "workers_test": 4,
     "epochs": 60,
     "log_interval": 10,
-    "saved_models_path": "weights/phase3_classification_unseenroom"
+    "saved_models_path": "weights/unseenroom_rir_mid_3_reasonable_ntap2"
   },
   "Model": {
-    "class": "model.esresnet_fbsp.ESResNeXtFBSP",
+    "class": "model.esresnet_fbsp.ESResNeXtFBSP_Regression",
     "args": {
       "n_fft": 2048,
       "hop_length": 561,
       "win_length": 1654,
       "window": "blackmanharris",
+      "freeze_encoder": false,
       "normalized": true,
       "onesided": true,
       "spec_height": -1,
       "spec_width": -1,
-      "num_classes": 7,
+      "num_classes": 1,
       "apply_attention": true,
-      "pretrained": "assets/ESResNeXtFBSP_AudioSet.pt"
+      "pretrained": null
     }
   },
   "Optimizer": {
@@ -52,8 +53,12 @@
       "root": "/home/koredata/hsinhung/speech",
       "train_csv": "../data/phase3_all_unseenroom_train.csv",
       "dev_csv": "../data/phase3_all_unseenroom_val.csv",
-      "label_type": "distance",
+      "rir": "/home/chunwei/dataset/rir_mid_resonable_ntap2/rir_mid_3",
+      "clean": "/home/chunwei/dataset/timit/raw/TIMIT/TRAIN",
+      "augment_num": 6000,
       "sample_rate": 44100,
+      "label_type": "distance",
+      "regression": true,
       "training": {"key": "train", "yes": true, "no": false}
     }
   },
@@ -97,15 +102,16 @@
     "Performance": {
       "window_name": null,
       "x_label": "#Epochs",
-      "y_label": "Accuracy",
+      "y_label": "MAE",
       "width": 1890,
       "height": 416,
       "lines": [
         {
-          "line_label": "Val. Acc.",
-          "class": "ignite.metrics.Accuracy",
+          "line_label": "Val. MAE.",
+          "class": "ignite.metrics.MeanAbsoluteError",
           "args": {},
-          "is_checkpoint": true
+          "is_checkpoint": true,
+          "save_lowest": true
         }
       ]
     }

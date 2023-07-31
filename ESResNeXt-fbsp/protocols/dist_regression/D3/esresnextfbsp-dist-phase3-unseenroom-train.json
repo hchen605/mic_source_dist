@@ -49,7 +49,7 @@
   "Dataset": {
     "class": "utils.datasets.MicClassification",
     "args": {
-      "root": "/home/speech",
+      "root": "/home/koredata/hsinhung/speech",
       "train_csv": "../data/phase3_all_unseenroom_train.csv",
       "dev_csv": "../data/phase3_all_unseenroom_val.csv",
       "sample_rate": 44100,

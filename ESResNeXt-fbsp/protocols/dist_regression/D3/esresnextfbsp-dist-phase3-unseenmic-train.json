@@ -6,18 +6,17 @@
   },
   "Setup": {
     "name": "PTINAS",
-    "suffix": "MC",
-    "batch_train": null,
+    "suffix": "dist",
+    "batch_train": 16,
     "batch_test": 256,
-    "workers_train": null,
+    "workers_train": 4,
     "workers_test": 4,
-    "epochs": null,
-    "log_interval": null,
-    "saved_models_path": null,
-    "eval_only": true
+    "epochs": 60,
+    "log_interval": 10,
+    "saved_models_path": "weights/unseenmic"
   },
   "Model": {
-    "class": "model.esresnet_fbsp.ESResNeXtFBSP_RegressionTest",
+    "class": "model.esresnet_fbsp.ESResNeXtFBSP_Regression",
     "args": {
       "n_fft": 2048,
       "hop_length": 561,
@@ -32,6 +31,15 @@
       "pretrained": null
     }
   },
+  "Optimizer": {
+    "class": "torch.optim.Adam",
+    "args": {
+      "lr": 1e-5,
+      "betas": [0.9, 0.999],
+      "eps": 1e-8,
+      "weight_decay": 5e-4
+    }
+  },
   "Scheduler": {
     "class": "torch.optim.lr_scheduler.ExponentialLR",
     "args": {
@@ -41,11 +49,10 @@
   "Dataset": {
     "class": "utils.datasets.MicClassification",
     "args": {
-      "root": "/home/speech",
-      "narrowband": [0, 2000],
+      "root": "/home/koredata/hsinhung/speech",
+      "train_csv": "../data/phase3_all_unseenmic_train.csv",
+      "dev_csv": "../data/phase3_all_unseenmic_val.csv",
       "sample_rate": 44100,
-      "train_csv": "",
-      "dev_csv": "../data/phase3_all_seen_test.csv",
       "label_type": "distance",
       "regression": true,
       "training": {"key": "train", "yes": true, "no": false}
@@ -55,6 +62,26 @@
     {
       "class": "utils.transforms.ToTensor1D",
       "args": {}
+    },
+    {
+      "class": "utils.transforms.RandomFlip",
+      "args": {"p": 0.5},
+      "test": false
+    },
+    {
+      "class": "utils.transforms.RandomScale",
+      "args": {"max_scale": 1.5},
+      "test": false
+    },
+    {
+      "class": "utils.transforms.RandomPadding",
+      "args": {"out_len": 220500},
+      "test": false
+    },
+    {
+      "class": "utils.transforms.RandomCrop",
+      "args": {"out_len": 220500},
+      "test": false
     },
     {
       "class": "utils.transforms.RandomPadding",
@@ -78,7 +105,9 @@
         {
           "line_label": "Val. MAE.",
           "class": "ignite.metrics.MeanAbsoluteError",
-          "args": {}
+          "args": {},
+          "is_checkpoint": true,
+          "save_lowest": true
         }
       ]
     }

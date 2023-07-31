@@ -6,6 +6,7 @@ import torch
 import torchvision as tv
 
 import ignite_trainer as it
+import torchaudio
 
 
 def scale(old_value, old_min, old_max, new_min, new_max):
@@ -170,3 +171,8 @@ class RandomPadding(it.AbstractTransform):
 
     def __call__(self, x: torch.Tensor) -> torch.Tensor:
         return self.random_pad(x) if x.shape[-1] < self.out_len else x
+
+class Spectrogram(torchaudio.transforms.Spectrogram):
+    def __call__(self, x: torch.Tensor) -> torch.Tensor:
+        complex_out = super().__call__(x)
+        return torch.stack([complex_out.real, complex_out.imag], dim=-1)

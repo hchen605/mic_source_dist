@@ -17,7 +17,7 @@
     "eval_only": true
   },
   "Model": {
-    "class": "model.esresnet_fbsp.ESResNeXtFBSP_RegressionTest",
+    "class": "model.esresnet_fbsp.ESResNeXtFBSP_Encoder",
     "args": {
       "n_fft": 2048,
       "hop_length": 561,
@@ -27,7 +27,7 @@
       "onesided": true,
       "spec_height": -1,
       "spec_width": -1,
-      "num_classes": 1,
+      "num_classes": 7,
       "apply_attention": true,
       "pretrained": null
     }
@@ -41,12 +41,12 @@
   "Dataset": {
     "class": "utils.datasets.MicClassification",
     "args": {
-      "root": "/home/speech",
-      "train_csv": "",
-      "dev_csv": "../data/phase3_all_seen_test.csv",
-      "sample_rate": 44100,
+      "root": "/home/koredata/hsinhung/speech",
+      "train_csv": null,
+      "label_set": ["0.02m", "1m", "3m", "5m", "7m", "9m"],
+      "dev_csv": "/home/chunwei/data/phase3_all_seen_test.csv",
       "label_type": "distance",
-      "regression": true,
+      "sample_rate": 44100,
       "training": {"key": "train", "yes": true, "no": false}
     }
   },
@@ -70,14 +70,17 @@
     "Performance": {
       "window_name": null,
       "x_label": "#Epochs",
-      "y_label": "MAE",
+      "y_label": "Accuracy",
       "width": 1890,
       "height": 416,
       "lines": [
         {
           "line_label": "Val. MAE.",
-          "class": "ignite.metrics.MeanAbsoluteError",
-          "args": {}
+          "class": "utils.metrics.Output_vectors",
+          "args": 
+          {
+            "output_dir": "exp/model_output"
+          }
         }
       ]
     }

@@ -15,7 +15,6 @@ from typing import Tuple
 from typing import Union
 from typing import Optional
 
-
 class LinearFBSP(torch.nn.Module):
 
     def __init__(self, out_features: int, bias: bool = True, normalized: bool = False):
@@ -222,8 +221,9 @@ class ESResNeXtFBSP(_ESResNetFBSP):
                  num_classes: int = 1000,
                  apply_attention: bool = False,
                  pretrained: bool = False,
-                 lock_pretrained: Optional[Union[bool, List[str]]] = None):
-
+                 lock_pretrained: Optional[Union[bool, List[str]]] = None,
+                 adapter_ratio=0, freeze_encoder=False):
+        self.adapter_ratio = adapter_ratio
         super(ESResNeXtFBSP, self).__init__(
             block=Bottleneck,
             layers=[3, 4, 6, 3],
@@ -242,16 +242,19 @@ class ESResNeXtFBSP(_ESResNetFBSP):
             groups=32,
             width_per_group=4
         )
-
-class ESResNeXtFBSP_Regression(ESResNeXtFBSP):
-    def __init__(self, pretrained: Union[bool, str] = False, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.activation = torch.nn.LeakyReLU(0.1)
-
+        if freeze_encoder:
+            for name, param in self.named_parameters():
+                param.requires_grad = "adapter" in name
+            for name, param in self.fc.named_parameters():
+                param.requires_grad = True
         self.pretrained = pretrained
         if pretrained:
             err_msg = self.load_pretrained()
 
+class ESResNeXtFBSP_Regression(ESResNeXtFBSP):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.activation = torch.nn.LeakyReLU(0.1)
     def _forward_classifier(self, x: torch.Tensor) -> torch.Tensor:
         x = self.fc(x)
         x = self.activation(x)
@@ -266,9 +269,14 @@ class ESResNeXtFBSP_Regression(ESResNeXtFBSP):
         #     ttf_norm,
         #     torch.full_like(ttf_norm, 1.0 if self.normalized else self.n_fft ** 0.5)
         # )
-
         loss = loss_pred # + loss_ttf_norm
         return loss
+
+class ESResNeXtFBSP_Encoder(ESResNeXtFBSP):
+    def _forward_classifier(self, x: torch.Tensor) -> torch.Tensor:
+        return x
+    def loss_fn(self, y_pred: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+        return F.l1_loss(y_pred, y_pred)
 
 class ESResNeXtFBSP_RegressionTest(ESResNeXtFBSP_Regression):
     def __init__(self, *args, **kwargs):

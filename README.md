@@ -63,6 +63,13 @@ python dist_train.py [options]
   
   The prefix of the path listed in `<train_csv>` and `<dev_csv>`
 
+* **D4 new** `--rir_root <rir_root>`
+  The path for the rir directory. Only effective when the `--timit_root` is specified.
+  The rir directory contains impulse responses of the recording. We applied the rir to all the data from `timit_root`.
+
+* **D4 new** `--timit_root <timit_root>`
+  The path for the TIMIT dataset. Only effective when the `--rir_root` is specified.
+
 #### Testing
 
 ```bash
@@ -90,6 +97,8 @@ python dist_test.py [options]
 ## ESResNext
 
 #### Training
+
+**D4 New**: Please refer to [the RIR augmentation configuration](/ESResNeXt-fbsp/protocols/dist_regression/D4/jointly-train-timit.json) for jointly train with RIR augmentation. Please also refer to [the unseen room test configuration](/ESResNeXt-fbsp/protocols/dist_regression/D3/esresnextfbsp-dist-phase3-unseenroom-test.json) for the perofrmance evaluation.
 
 ```bash
 cd ESResNext-fbsp

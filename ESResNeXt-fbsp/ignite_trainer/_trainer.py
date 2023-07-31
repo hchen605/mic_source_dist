@@ -71,7 +71,9 @@ def run(experiment_name: str,
         setup_suffix: Optional[str] = None,
         orig_stdout: Optional[io.TextIOBase] = None,
         skip_train_val: bool = False,
-        eval_only: bool = False):
+        eval_only: bool = False,
+        grad_accum: int = 1,
+        noise_lambda: float = -1):
 
     with _utils.tqdm_stdout(orig_stdout) as orig_stdout:
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -112,6 +114,10 @@ def run(experiment_name: str,
 
         Network: Type = _utils.load_class(model_class)
         model: _interfaces.AbstractNet = Network(**model_args)
+        if noise_lambda > 0:
+            for name, param in model.named_parameters():
+                if not torch.isnan(torch.std(param)):
+                    model.state_dict()[name][:] += (torch.rand(param.size())-0.5) * noise_lambda * torch.std(param)
         model = torch.nn.DataParallel(model, device_ids=range(torch.cuda.device_count()))
         model = model.to(device)
 
@@ -146,23 +152,29 @@ def run(experiment_name: str,
             prog_bar_iters = tqdm.tqdm(desc='Batches', file=orig_stdout, dynamic_ncols=True)
         tqdm.tqdm.write(f'\n{repr(model)}\n')
         tqdm.tqdm.write('Total number of parameters: {:.2f}M'.format(sum(p.numel() for p in model.parameters()) / 1e6))
+        tqdm.tqdm.write('Total number of trainable parameters: {:.2f}M'.format(sum(p.numel() if p.requires_grad else 0 for p in model.parameters()) / 1e6))
 
-        def training_step(_: ieng.Engine, batch: _interfaces.TensorPair) -> torch.Tensor:
+        def training_step(engine: ieng.Engine, batch: _interfaces.TensorPair) -> torch.Tensor:
             model.train()
 
-            optimizer.zero_grad()
+            iteration = (engine.state.iteration - 1) % engine.state.epoch_length
+
+            if iteration % grad_accum == 0:
+                optimizer.zero_grad()
 
             x, y = batch
-
             x = x.to(device)
             y = y.to(device)
-
             _, loss = model(x, y)
+
+
+
             if loss.ndim > 0:
                 loss = loss.mean()
 
-            loss.backward(retain_graph=False)
-            optimizer.step(None)
+            (loss / grad_accum).backward(retain_graph=False)
+            if iteration % grad_accum == grad_accum - 1:
+                optimizer.step(None)
 
             return loss.item()
 
@@ -619,6 +631,9 @@ def main():
                 args.saved_models_path, config['Setup']['saved_models_path'], SAVED_MODELS_PATH
             )
             eval_only = config['Setup'].get('eval_only', False)
+            grad_accum = config['Setup'].get('grad_accum', 1)
+            noise_lambda = config['Setup'].get('noise_lambda', -1)
+            assert grad_accum >= 1
 
             model_class = config['Model']['class']
             model_args = config['Model']['args']
@@ -671,7 +686,9 @@ def main():
                 setup_suffix=args.suffix,
                 orig_stdout=orig_stdout,
                 skip_train_val=args.skip_train_val,
-                eval_only=eval_only
+                eval_only=eval_only,
+                grad_accum=grad_accum,
+                noise_lambda=noise_lambda
             )
 
         prog_bar_exps.close()

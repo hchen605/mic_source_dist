@@ -93,7 +93,7 @@ def conv_layer3(inputs, num_channels=6, num_filters=56, learn_bn=True, wd=1e-4, 
     return x
 
 
-def model_fcnn(input_shape=None, num_filters=[24, 48, 96], wd=1e-3):
+def model_fcnn(input_shape=None, num_filters=[24, 48, 96], wd=1e-3, nclass=1):
     inputs = Input(shape=(48000,))
     x = Reshape((1,-1))(inputs)
 
@@ -139,9 +139,12 @@ def model_fcnn(input_shape=None, num_filters=[24, 48, 96], wd=1e-3):
     OutputPath = BatchNormalization(center=False, scale=False)(OutputPath)
     OutputPath = channel_attention(OutputPath, ratio=2)
     OutputPath = GlobalAveragePooling2D()(OutputPath)
-    OutputPath = Dense(1)(OutputPath)
 
-    OutputPath = Activation('relu')(OutputPath)
+    OutputPath = Dense(nclass)(OutputPath)
+    if nclass == 1:
+        OutputPath = Activation('relu')(OutputPath)
+    else:
+        OutputPath = Activation('softmax')(OutputPath)
 
     model = Model(inputs=inputs, outputs=OutputPath)
     return model

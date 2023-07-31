@@ -21,8 +21,6 @@ import random
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import ConfusionMatrixDisplay
 
-from data_generator import MicRIRDataGenerator
-
 parser = argparse.ArgumentParser()
 parser.add_argument("--eps", type=int, default=100, help="number of epochs")
 parser.add_argument("--savedir", type=str, default=os.path.join("weight", "AttCNN"))
@@ -30,9 +28,6 @@ parser.add_argument("--train_csv", type=str, default='../../data/phase3_all_seen
 parser.add_argument("--dev_csv", type=str, default='../../data/phase3_all_seen_val.csv')
 parser.add_argument("--narrowband", type=int, nargs='+', default=None)
 parser.add_argument("--root", type=str, default='/home/koredata/hsinhung/speech')
-parser.add_argument("--rir_root", type=str, default='')
-parser.add_argument("--timit_root", type=str, default='')
-parser.add_argument("--nrir", type=int, default=6000)
 args = parser.parse_args()
 
 config = ConfigProto()
@@ -44,32 +39,31 @@ config = tensorflow.compat.v1.ConfigProto(intra_op_parallelism_threads=1,inter_o
 sess = tensorflow.compat.v1.Session(graph=tensorflow.compat.v1.get_default_graph(), config=config)
 K.set_session(sess)
 
-x_train, y_train = load_data(args.train_csv, root=args.root, narrowband=args.narrowband)
-x_dev, y_dev = load_data(args.dev_csv, root=args.root, narrowband=args.narrowband)
+x_train, y_train = load_data(args.train_csv, root=args.root, narrowband=args.narrowband, label_type=np.str)
+x_dev, y_dev = load_data(args.dev_csv, root=args.root, narrowband=args.narrowband, label_type=np.str)
 
-batch_size = 32
-if args.rir_root != '' and args.timit_root != '':
-    x_rir, y_rir = load_rir(args.rir_root)
-    x_timit = load_timit(args.timit_root)
-    data_train = MicRIRDataGenerator(x_train, y_train, x_rir, y_rir, x_timit, nrir=args.nrir, batch_size=batch_size)
-else:
-    data_train = (x_train, y_train)
-data_dev = (x_dev, y_dev)
+labels = sorted(list(set(y_train)))
+label2idx = {label: idx for idx, label in enumerate(labels)}
+y_train = np.array([label2idx[label] for label in y_train])
+y_dev = np.array([label2idx[label] for label in y_dev])
+y_train = np.eye(len(labels))[y_train]
+y_dev = np.eye(len(labels))[y_dev]
 
-print ("=== Number of training data: {}".format(len(data_train)))
+print ("=== Number of training data: {}".format(len(y_train)))
 
 # +
 # Parameters
 num_freq_bin = 128
 num_audio_channels = 1
+batch_size = 32
 epochs = args.eps
 
 
 # Model
-model = model_fcnn(input_shape=[num_freq_bin, None, num_audio_channels], num_filters=[24, 48, 96], wd=0)
+model = model_fcnn(input_shape=[num_freq_bin, None, num_audio_channels], num_filters=[24, 48, 96], wd=0, nclass=len(labels))
 
 
-model.compile(loss='mean_absolute_error',
+model.compile(loss='categorical_crossentropy', metrics=['accuracy'],
               optimizer=Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False))
 
 
@@ -83,7 +77,7 @@ checkpoint = keras.callbacks.ModelCheckpoint(save_path, monitor='val_loss', verb
 callbacks = [checkpoint]
 
 # Training
-exp_history = model.fit(data_train, batch_size=batch_size, epochs=epochs, verbose=1,
-              validation_data=data_dev, callbacks=callbacks)
+exp_history = model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, verbose=1,
+              validation_data=(x_dev, y_dev), callbacks=callbacks)
 
 print("=== Best Val. Loss: ", max(exp_history.history['val_loss']), " At Epoch of ", np.argmax(exp_history.history['val_loss'])+1)

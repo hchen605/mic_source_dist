@@ -6,14 +6,15 @@
   },
   "Setup": {
     "name": "PTINAS",
-    "suffix": "dist",
-    "batch_train": 16,
+    "suffix": "MC",
+    "batch_train": null,
     "batch_test": 256,
-    "workers_train": 4,
+    "workers_train": null,
     "workers_test": 4,
-    "epochs": 60,
-    "log_interval": 10,
-    "saved_models_path": "weights/phase3_classification_unseenroom"
+    "epochs": null,
+    "log_interval": null,
+    "saved_models_path": null,
+    "eval_only": true
   },
   "Model": {
     "class": "model.esresnet_fbsp.ESResNeXtFBSP",
@@ -26,18 +27,10 @@
       "onesided": true,
       "spec_height": -1,
       "spec_width": -1,
-      "num_classes": 7,
+      "num_classes": 18,
+      "adapter_ratio": 0.05,
       "apply_attention": true,
-      "pretrained": "assets/ESResNeXtFBSP_AudioSet.pt"
-    }
-  },
-  "Optimizer": {
-    "class": "torch.optim.Adam",
-    "args": {
-      "lr": 1e-5,
-      "betas": [0.9, 0.999],
-      "eps": 1e-8,
-      "weight_decay": 5e-4
+      "pretrained": null
     }
   },
   "Scheduler": {
@@ -50,9 +43,9 @@
     "class": "utils.datasets.MicClassification",
     "args": {
       "root": "/home/koredata/hsinhung/speech",
-      "train_csv": "../data/phase3_all_unseenroom_train.csv",
-      "dev_csv": "../data/phase3_all_unseenroom_val.csv",
-      "label_type": "distance",
+      "train_csv": null,
+      "dev_csv": "/home/hsinhung/mic_acoustic/12class/data/test_full_mobile_clo.csv",
+      "label_type": "16_types",
       "sample_rate": 44100,
       "training": {"key": "train", "yes": true, "no": false}
     }
@@ -61,26 +54,6 @@
     {
       "class": "utils.transforms.ToTensor1D",
       "args": {}
-    },
-    {
-      "class": "utils.transforms.RandomFlip",
-      "args": {"p": 0.5},
-      "test": false
-    },
-    {
-      "class": "utils.transforms.RandomScale",
-      "args": {"max_scale": 1.5},
-      "test": false
-    },
-    {
-      "class": "utils.transforms.RandomPadding",
-      "args": {"out_len": 220500},
-      "test": false
-    },
-    {
-      "class": "utils.transforms.RandomCrop",
-      "args": {"out_len": 220500},
-      "test": false
     },
     {
       "class": "utils.transforms.RandomPadding",
@@ -104,8 +77,7 @@
         {
           "line_label": "Val. Acc.",
           "class": "ignite.metrics.Accuracy",
-          "args": {},
-          "is_checkpoint": true
+          "args": {}
         }
       ]
     }

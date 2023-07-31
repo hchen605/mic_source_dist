@@ -47,6 +47,21 @@ def conv1x1(in_planes: int, out_planes: int, stride: Union[int, Tuple[int, int]]
         bias=False
     )
 
+class AdapterBlock(torch.nn.Module):
+    def __init__(self, orig_dim, adapter_dim, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if adapter_dim != 0:
+            self.block = torch.nn.Sequential(
+                torch.nn.Linear(orig_dim, adapter_dim),
+                torch.nn.LeakyReLU(),
+                torch.nn.Linear(adapter_dim, orig_dim)
+            )
+    def forward(self, x):
+        if hasattr(self, 'block'):
+            x = x.permute(0, 2, 3, 1)
+            adapter_path = self.block(x)
+            x = (x + adapter_path).permute(0, 3, 1, 2)
+        return x
 
 class BasicBlock(torch.nn.Module):
 
@@ -60,7 +75,8 @@ class BasicBlock(torch.nn.Module):
                  groups: int = 1,
                  base_width: int = 64,
                  dilation: Union[int, Tuple[int, int]] = 1,
-                 norm_layer: Optional[Type[torch.nn.Module]] = None):
+                 norm_layer: Optional[Type[torch.nn.Module]] = None,
+                 adapter_ratio = 0):
 
         super(BasicBlock, self).__init__()
 
@@ -72,9 +88,11 @@ class BasicBlock(torch.nn.Module):
             raise NotImplementedError("Dilation > 1 not supported in BasicBlock")
 
         # Both self.conv1 and self.downsample layers downsample the input when stride != 1
+        self.adapter1 = AdapterBlock(inplanes, int(adapter_ratio * inplanes))
         self.conv1 = conv3x3(inplanes, planes, stride)
         self.bn1 = norm_layer(planes)
         self.relu = torch.nn.ReLU()
+        self.adapter2 = AdapterBlock(planes, int(adapter_ratio * planes))
         self.conv2 = conv3x3(planes, planes)
         self.bn2 = norm_layer(planes)
         self.downsample = downsample
@@ -83,10 +101,12 @@ class BasicBlock(torch.nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         identity = x
 
+        out = self.adapter1(x)
         out = self.conv1(x)
         out = self.bn1(out)
         out = self.relu(out)
 
+        out = self.adapter2(out)
         out = self.conv2(out)
         out = self.bn2(out)
 
@@ -111,7 +131,8 @@ class Bottleneck(torch.nn.Module):
                  groups: int = 1,
                  base_width: int = 64,
                  dilation: Union[int, Tuple[int, int]] = 1,
-                 norm_layer: Optional[Type[torch.nn.Module]] = None):
+                 norm_layer: Optional[Type[torch.nn.Module]] = None,
+                 adapter_ratio = 0):
 
         super(Bottleneck, self).__init__()
 
@@ -120,10 +141,15 @@ class Bottleneck(torch.nn.Module):
 
         width = int(planes * (base_width / 64.0)) * groups
 
+        self.adapter1 = AdapterBlock(inplanes, int(adapter_ratio * inplanes))
         self.conv1 = conv1x1(inplanes, width)
         self.bn1 = norm_layer(width)
+
+        self.adapter2 = AdapterBlock(width, int(adapter_ratio * width))
         self.conv2 = conv3x3(width, width, stride, groups, dilation)
         self.bn2 = norm_layer(width)
+
+        self.adapter3 = AdapterBlock(width, int(adapter_ratio * width))
         self.conv3 = conv1x1(width, planes * self.expansion)
         self.bn3 = norm_layer(planes * self.expansion)
         self.relu = torch.nn.ReLU()
@@ -133,14 +159,17 @@ class Bottleneck(torch.nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         identity = x
 
+        x = self.adapter1(x)
         out = self.conv1(x)
         out = self.bn1(out)
         out = self.relu(out)
 
+        out = self.adapter2(out)
         out = self.conv2(out)
         out = self.bn2(out)
         out = self.relu(out)
 
+        out = self.adapter3(out)
         out = self.conv3(out)
         out = self.bn3(out)
 
@@ -271,6 +300,10 @@ class ResNetWithAttention(it.AbstractNet):
         norm_layer = self._norm_layer
         downsample = None
         previous_dilation = self.dilation
+        if hasattr(self, 'adapter_ratio'):
+            adapter_ratio = self.adapter_ratio
+        else:
+            adapter_ratio = 0
 
         if dilate:
             self.dilation *= stride
@@ -291,7 +324,8 @@ class ResNetWithAttention(it.AbstractNet):
             self.groups,
             self.base_width,
             previous_dilation,
-            norm_layer
+            norm_layer,
+            adapter_ratio = adapter_ratio
         ))
         self.inplanes = planes * block.expansion
         for _ in range(1, blocks):
@@ -301,7 +335,8 @@ class ResNetWithAttention(it.AbstractNet):
                 groups=self.groups,
                 base_width=self.base_width,
                 dilation=self.dilation,
-                norm_layer=norm_layer
+                norm_layer=norm_layer,
+                adapter_ratio = adapter_ratio
             ))
 
         return torch.nn.Sequential(*layers)
@@ -370,8 +405,8 @@ class ResNetWithAttention(it.AbstractNet):
 
     def forward(self,
                 x: torch.Tensor,
-                y: Optional[torch.Tensor] = None) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
-
+                y: Optional[torch.Tensor] = None
+                ) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
         x = self._forward_pre_processing(x)
         x = self._forward_features(x)
         x = self._forward_reduction(x)

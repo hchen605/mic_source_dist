@@ -16,8 +16,32 @@ from scipy import signal
 import os
 import sys
 
+import subprocess
+
 sr = 16000 
 duration = 3
+
+def load_timit(timit_path):
+    wavpath = subprocess.check_output(['find', timit_path, '-name', '*.WAV']).decode('utf-8')
+    wavpath = wavpath.strip('\n').split('\n')
+
+    mapper = [(i, None) for i in wavpath]
+    wav = process_map(_load_data, mapper, desc=f"Loading {timit_path}")
+    wav = np.array([i for i in wav if i is not None])
+
+    return wav
+
+def load_rir(rir_path):
+    wavpath = os.listdir(rir_path)
+    labels = [i.split('_')[0] for i in wavpath]
+    wavpath = [os.path.join(rir_path, i) for i in wavpath]
+
+    mapper = [(i, None) for i in wavpath]
+    wav = process_map(_load_data, mapper, desc=f"Loading {rir_path}")
+    wav = np.array([i for i in wav if i is not None])
+
+    labels = np.array([i.strip('m') for i in labels], dtype = np.float64)
+    return wav, labels
 
 # +
 def _load_data(args):
@@ -39,7 +63,7 @@ def _load_data(args):
         exit(1)
     if stereo.shape[0] == 0:
         return None
-    stereo = stereo / np.abs(stereo).max()
+    # stereo = stereo / np.abs(stereo).max()
     # stereo = librosa.to_mono(stereo.T)
 
     if fs != sr:
@@ -53,7 +77,7 @@ def _load_data(args):
     
     return x
 
-def load_data(data_csv, root, narrowband=None):
+def load_data(data_csv, root, narrowband=None, label_type=np.float64):
     data_df = pd.read_csv(data_csv, sep='\t')   
     wavpath = data_df['filename'].tolist()
     labels = data_df['distance'].to_list()
@@ -63,7 +87,7 @@ def load_data(data_csv, root, narrowband=None):
     wav = process_map(_load_data, mapper, desc=f"Loading {data_csv}")
     wav = np.array([i for i in wav if i is not None])
 
-    labels = np.array([i.strip('m') for i in labels], dtype = np.float64)
+    labels = np.array([i.strip('m') for i in labels], dtype = label_type)
     return wav, labels
 
 def _load_data_rir(data):

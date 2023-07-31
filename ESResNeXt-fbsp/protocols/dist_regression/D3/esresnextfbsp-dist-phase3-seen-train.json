@@ -13,10 +13,10 @@
     "workers_test": 4,
     "epochs": 60,
     "log_interval": 10,
-    "saved_models_path": "weights/phase3_classification_unseenroom"
+    "saved_models_path": "weights/seen"
   },
   "Model": {
-    "class": "model.esresnet_fbsp.ESResNeXtFBSP",
+    "class": "model.esresnet_fbsp.ESResNeXtFBSP_Regression",
     "args": {
       "n_fft": 2048,
       "hop_length": 561,
@@ -26,9 +26,9 @@
       "onesided": true,
       "spec_height": -1,
       "spec_width": -1,
-      "num_classes": 7,
+      "num_classes": 1,
       "apply_attention": true,
-      "pretrained": "assets/ESResNeXtFBSP_AudioSet.pt"
+      "pretrained": null
     }
   },
   "Optimizer": {
@@ -50,10 +50,11 @@
     "class": "utils.datasets.MicClassification",
     "args": {
       "root": "/home/koredata/hsinhung/speech",
-      "train_csv": "../data/phase3_all_unseenroom_train.csv",
-      "dev_csv": "../data/phase3_all_unseenroom_val.csv",
-      "label_type": "distance",
+      "train_csv": "../data/phase3_all_seen_train.csv",
+      "dev_csv": "../data/phase3_all_seen_val.csv",
       "sample_rate": 44100,
+      "label_type": "distance",
+      "regression": true,
       "training": {"key": "train", "yes": true, "no": false}
     }
   },
@@ -97,15 +98,16 @@
     "Performance": {
       "window_name": null,
       "x_label": "#Epochs",
-      "y_label": "Accuracy",
+      "y_label": "MAE",
       "width": 1890,
       "height": 416,
       "lines": [
         {
-          "line_label": "Val. Acc.",
-          "class": "ignite.metrics.Accuracy",
+          "line_label": "Val. MAE.",
+          "class": "ignite.metrics.MeanAbsoluteError",
           "args": {},
-          "is_checkpoint": true
+          "is_checkpoint": true,
+          "save_lowest": true
         }
       ]
     }

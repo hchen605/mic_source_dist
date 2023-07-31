@@ -11,12 +11,12 @@
     "batch_test": 256,
     "workers_train": 4,
     "workers_test": 4,
-    "epochs": 60,
+    "epochs": 100,
     "log_interval": 10,
-    "saved_models_path": "weights/unseenmic"
+    "saved_models_path": "weights/mic_classification_adapter"
   },
   "Model": {
-    "class": "model.esresnet_fbsp.ESResNeXtFBSP_Regression",
+    "class": "model.esresnet_fbsp.ESResNeXtFBSP",
     "args": {
       "n_fft": 2048,
       "hop_length": 561,
@@ -26,9 +26,11 @@
       "onesided": true,
       "spec_height": -1,
       "spec_width": -1,
-      "num_classes": 1,
+      "num_classes": 18,
       "apply_attention": true,
-      "pretrained": null
+      "adapter_ratio": 0.05,
+      "freeze_encoder": true,
+      "pretrained": "assets/ESResNeXtFBSP_AudioSet.pt"
     }
   },
   "Optimizer": {
@@ -47,14 +49,13 @@
     }
   },
   "Dataset": {
-    "root": "/home/speech",
     "class": "utils.datasets.MicClassification",
     "args": {
-      "train_csv": "../data/phase3_all_unseenmic_train.csv",
-      "dev_csv": "../data/phase3_all_unseenmic_val.csv",
+      "root": "/home/koredata/hsinhung/speech",
+      "train_csv": "/home/hsinhung/mic_acoustic/12class/data/train_full_mobile_clo.csv",
+      "dev_csv": "/home/hsinhung/mic_acoustic/12class/data/dev_full_mobile_clo.csv",
+      "label_type": "16_types",
       "sample_rate": 44100,
-      "label_type": "distance",
-      "regression": true,
       "training": {"key": "train", "yes": true, "no": false}
     }
   },
@@ -98,16 +99,15 @@
     "Performance": {
       "window_name": null,
       "x_label": "#Epochs",
-      "y_label": "MAE",
+      "y_label": "Accuracy",
       "width": 1890,
       "height": 416,
       "lines": [
         {
-          "line_label": "Val. MAE.",
-          "class": "ignite.metrics.MeanAbsoluteError",
+          "line_label": "Val. Acc.",
+          "class": "ignite.metrics.Accuracy",
           "args": {},
-          "is_checkpoint": true,
-          "save_lowest": true
+          "is_checkpoint": true
         }
       ]
     }
